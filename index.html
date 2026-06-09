@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pepe's Big Merge - Image Edition</title>
+    <title>Pepe's Big Merge - Emoji Edition</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <style>
         :root {
@@ -85,6 +85,7 @@
             position: relative;
             border-radius: 14px;
             overflow: hidden;
+            background-color: #11161c;
         }
 
         /* Evolūcijas josla apakšā */
@@ -96,7 +97,7 @@
             border: 1px solid #233243;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 15px;
             max-width: 450px;
             overflow-x: auto;
         }
@@ -110,12 +111,8 @@
             text-align: center;
         }
 
-        .evo-img {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #4caf50;
+        .evo-emoji {
+            font-size: 24px;
             margin-bottom: 4px;
         }
 
@@ -133,6 +130,7 @@
             background: repeating-linear-gradient(90deg, #ff3333, #ff3333 10px, transparent 10px, transparent 20px);
             opacity: 0.6;
             pointer-events: none;
+            z-index: 10;
         }
     </style>
 </head>
@@ -167,28 +165,28 @@
         const WIDTH = 450;
         const HEIGHT = 650;
         
-        // Evolūcijas līmeņi ar publiskām mēmu attēlu saitēm (izmantoti caurspīdīgi PNG attēli)
+        // Mēmu evolūcija ar krāsām un Emoji sejām, kas atbilst mēmiem
         const EVOLUTION_LEVELS = [
-            { size: 18, score: 2, name: 'Kurkulis', img: 'https://i.imgur.com/8mds98A.png' },
-            { size: 26, score: 4, name: 'Krupis', img: 'https://i.imgur.com/S2XgXgl.png' },
-            { size: 36, score: 8, name: 'Sad Pepe', img: 'https://i.imgur.com/Kdfun6C.png' },
-            { size: 46, score: 16, name: 'Clown Pepe', img: 'https://i.imgur.com/vHq7Fv8.png' },
-            { size: 56, score: 32, name: 'Happy Pepe', img: 'https://i.imgur.com/gK6Bw2I.png' },
-            { size: 68, score: 64, name: 'Smart Pepe', img: 'https://i.imgur.com/bZ6W44b.png' },
-            { size: 82, score: 128, name: 'Chad Pepe', img: 'https://i.imgur.com/6Xw67kR.png' },
-            { size: 98, score: 256, name: 'GigaChad', img: 'https://i.imgur.com/6S6MshB.png' }
+            { size: 18, score: 2, name: 'Kurkulis', emoji: '🌱', color: '#8bc34a' },
+            { size: 26, score: 4, name: 'Krupis', emoji: '🐸', color: '#4caf50' },
+            { size: 36, score: 8, name: 'Sad Pepe', emoji: '😢', color: '#2e7d32' },
+            { size: 46, score: 16, name: 'Clown Pepe', emoji: '🤡', color: '#ffeb3b' },
+            { size: 56, score: 32, name: 'Happy Pepe', emoji: '😎', color: '#00bcd4' },
+            { size: 68, score: 64, name: 'Smart Pepe', emoji: '🧠', color: '#9c27b0' },
+            { size: 82, score: 128, name: 'Chad Pepe', emoji: '💪', color: '#ff9800' },
+            { size: 98, score: 256, name: 'GigaChad', emoji: '👑', color: '#f44336' }
         ];
 
         let highScore = localStorage.getItem('pepe_highscore') || 0;
         document.getElementById('high-score').innerText = highScore;
 
-        // Izveidojam vizuālo ceļvedi apakšā ar attēliem
+        // Izveidojam vizuālo ceļvedi apakšā
         const evoPathContainer = document.getElementById('evolution-path');
         EVOLUTION_LEVELS.forEach((lvl, idx) => {
             const step = document.createElement('div');
             step.className = 'evo-step';
             step.innerHTML = `
-                <img class="evo-img" src="${lvl.img}" alt="${lvl.name}">
+                <div class="evo-emoji">${lvl.emoji}</div>
                 <div style="color:#a1b5cc; font-weight:600;">${lvl.name}</div>
             `;
             evoPathContainer.appendChild(step);
@@ -211,7 +209,7 @@
                 width: WIDTH,
                 height: HEIGHT,
                 wireframes: false,
-                background: 'transparent'
+                background: '#11161c'
             }
         });
 
@@ -233,31 +231,50 @@
 
         function updateNextPreview() {
             const nextLvl = EVOLUTION_LEVELS[currentNextIndex];
-            document.getElementById('next-name').innerText = nextLvl.name;
+            document.getElementById('next-name').innerText = nextLvl.emoji + " " + nextLvl.name;
         }
 
-        // Šeit tiek piesaistīts mēma attēls fiziskajam aplim
         function createMeme(x, y, index) {
             const level = EVOLUTION_LEVELS[index];
             
-            // Aprēķinām mērogu (scale), lai attēls precīzi derētu apļa izmēram
-            // Standarta attēla izmērs šajās saitēs ir ap 512x512 pikseļi
-            const scaleFactor = (level.size * 2) / 512; 
-
             return Bodies.circle(x, y, level.size, {
                 restitution: 0.2,
                 friction: 0.1,
                 label: 'pepe',
-                plugin: { levelIndex: index },
+                plugin: { levelIndex: index, emoji: level.emoji },
                 render: {
-                    sprite: {
-                        texture: level.img,
-                        xScale: scaleFactor,
-                        yScale: scaleFactor
-                    }
+                    fillStyle: level.color,
+                    strokeStyle: '#ffffff',
+                    lineWidth: 2
                 }
             });
         }
+
+        // Pielāgota zīmēšana: Matter.js parasto apļu vietā uzzīmē virsū Emoji sejas
+        Events.on(render, 'afterRender', () => {
+            const context = render.context;
+            const bodies = Composite.allBodies(world);
+
+            bodies.forEach(body => {
+                if (body.label === 'pepe') {
+                    const emoji = body.plugin.emoji;
+                    const index = body.plugin.levelIndex;
+                    const size = EVOLUTION_LEVELS[index].size;
+
+                    context.save();
+                    context.translate(body.position.x, body.position.y);
+                    context.rotate(body.angle);
+                    
+                    // Noregulējam Emoji teksta izmēru atkarībā no bumbas lieluma
+                    context.font = `${size * 1.3}px Arial`;
+                    context.textAlign = 'center';
+                    context.textBaseline = 'middle';
+                    context.fillText(emoji, 0, 0);
+                    
+                    context.restore();
+                }
+            });
+        });
 
         document.getElementById('game-container').addEventListener('click', (event) => {
             if (!canDrop) return;
@@ -292,6 +309,47 @@
 
                     if (idxA === idxB && idxA < EVOLUTION_LEVELS.length - 1) {
                         const midX = (bodyA.position.x + bodyB.position.x) / 2;
+                        const midY = (bodyA.position.y + bodyB.position.y) / 2;
+
+                        Composite.remove(world, [bodyA, bodyB]);
+
+                        const nextIdx = idxA + 1;
+                        const upgradedMeme = createMeme(midX, midY, nextIdx);
+
+                        score += EVOLUTION_LEVELS[nextIdx].score;
+                        document.getElementById('score').innerText = score;
+
+                        if (score > highScore) {
+                            highScore = score;
+                            document.getElementById('high-score').innerText = highScore;
+                            localStorage.setItem('pepe_highscore', highScore);
+                        }
+
+                        setTimeout(() => {
+                            Composite.add(world, upgradedMeme);
+                        }, 15);
+                    }
+                }
+            });
+        });
+
+        setInterval(() => {
+            const allBodies = Composite.allBodies(world);
+            allBodies.forEach(body => {
+                if (body.label === 'pepe' && body.position.y < 110 && body.velocity.y < 0.05) {
+                    alert("Spēle Beigusies! Tavs rezultāts: " + score);
+                    score = 0;
+                    document.getElementById('score').innerText = score;
+                    
+                    const toRemove = allBodies.filter(b => b.label === 'pepe');
+                    Composite.remove(world, toRemove);
+                }
+            });
+        }, 1500);
+
+    </script>
+</body>
+</html>ition.x) / 2;
                         const midY = (bodyA.position.y + bodyB.position.y) / 2;
 
                         Composite.remove(world, [bodyA, bodyB]);
