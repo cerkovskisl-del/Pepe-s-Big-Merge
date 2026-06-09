@@ -3,38 +3,347 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pepe Evolution - Suika Style Game</title>
+    <title>Pepe's Big Merge - Suika Edition</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <style>
+        :root {
+            --bg-color: #0b0f14;
+            --panel-bg: #141b24;
+            --pepe-green: #4caf50;
+            --neon-glow: #39ff14;
+            --text-color: #ffffff;
+        }
+
         body {
             margin: 0;
             padding: 0;
-            background-color: #1a1a1a;
-            color: #fff;
-            font-family: Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            overflow: hidden;
+            overflow-x: hidden;
         }
-        #ui {
-            margin-bottom: 10px;
+
+        /* UI Augšējais Panelis */
+        #header-panel {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin: 0 0 10px 0;
+            color: var(--pepe-green);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+
+        .stats-container {
+            display: flex;
+            gap: 20px;
+            background: var(--panel-bg);
+            padding: 10px 25px;
+            border-radius: 12px;
+            border: 1px solid #233243;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .stat-box {
             text-align: center;
         }
-        #score {
-            font-size: 24px;
-            font-weight: bold;
-            color: #4caf50;
+
+        .stat-label {
+            font-size: 11px;
+            color: #7f93a7;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        #next-name {
+            color: var(--neon-glow);
+            text-shadow: 0 0 5px rgba(57, 255, 20, 0.4);
+        }
+
+        /* Spēles laukums (Krūze) */
+        #game-wrapper {
+            position: relative;
+            padding: 10px;
+            background: radial-gradient(circle, #17222e 0%, #0b0f14 100%);
+            border-radius: 20px;
+            border: 2px solid #1f2d3d;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+        }
+
         #game-container {
             position: relative;
-            border: 4px solid #333;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
-            background-color: #111;
+            border-radius: 14px;
+            overflow: hidden;
         }
-        #next-preview {
+
+        /* Evolūcijas Ceļvedis Apakšā */
+        #evolution-path {
+            margin-top: 20px;
+            background: var(--panel-bg);
+            padding: 12px 20px;
+            border-radius: 12px;
+            border: 1px solid #233243;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            max-width: 450px;
+            overflow-x: auto;
+        }
+
+        .evo-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 11px;
+            min-width: 65px;
+            text-align: center;
+        }
+
+        .evo-circle {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            margin-bottom: 4px;
+            box-shadow: 0 0 8px rgba(255,255,255,0.2);
+        }
+
+        .evo-arrow {
+            color: #4f6780;
+            font-weight: bold;
+        }
+
+        /* Līnija, kuru nedrīkst pārkāpt */
+        #danger-line {
+            position: absolute;
+            top: 110px;
+            left: 10px;
+            width: 450px;
+            height: 2px;
+            background: repeating-linear-gradient(90deg, #ff3333, #ff3333 10px, transparent 10px, transparent 20px);
+            opacity: 0.6;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="header-panel">
+        <h1>Pepe's Big Merge</h1>
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-label">Punkti</div>
+                <div id="score" class="stat-value">0</div>
+            </div>
+            <div class="stat-box" style="border-left: 1px solid #233243; border-right: 1px solid #233243; padding: 0 20px;">
+                <div class="stat-label">Nākamais Pepe</div>
+                <div id="next-name" class="stat-value">-</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Labākais Rezultāts</div>
+                <div id="high-score" class="stat-value">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-wrapper">
+        <div id="danger-line"></div>
+        <div id="game-container"></div>
+    </div>
+
+    <div id="evolution-path" id="evo-path">
+        </div>
+
+    <script>
+        const WIDTH = 450;
+        const HEIGHT = 650;
+        
+        // Uzlaboti mēmu līmeņi ar smukākām neona krāsām un specifiskiem nosaukumiem
+        const EVOLUTION_LEVELS = [
+            { size: 15, color: '#a3e223', name: 'Kurkulis', score: 2 },
+            { size: 24, color: '#7cb342', name: 'Krupis', score: 4 },
+            { size: 34, color: '#388e3c', name: 'Sad Pepe', score: 8 },
+            { size: 44, color: '#0097a7', name: 'Happy Pepe', score: 16 },
+            { size: 55, color: '#3f51b5', name: 'Monk Pepe', score: 32 },
+            { size: 68, color: '#9c27b0', name: 'Rare Pepe', score: 64 },
+            { size: 82, color: '#ff9800', name: 'Chad Pepe', score: 128 },
+            { size: 98, color: '#f44336', name: 'GigaChad', score: 256 }
+        ];
+
+        // Ielādējam iepriekšējo labāko rezultātu
+        let highScore = localStorage.getItem('pepe_highscore') || 0;
+        document.getElementById('high-score').innerText = highScore;
+
+        // Izveidojam evolūcijas ceļvedi vizuāli apakšā
+        const evoPathContainer = document.getElementById('evolution-path');
+        EVOLUTION_LEVELS.forEach((lvl, idx) => {
+            const step = document.createElement('div');
+            step.className = 'evo-step';
+            step.innerHTML = `
+                <div class="evo-circle" style="background:${lvl.color};"></div>
+                <div style="color:#a1b5cc; font-weight:600;">${lvl.name}</div>
+            `;
+            evoPathContainer.appendChild(step);
+            if (idx < EVOLUTION_LEVELS.length - 1) {
+                const arrow = document.createElement('div');
+                arrow.className = 'evo-arrow';
+                arrow.innerText = '➔';
+                evoPathContainer.appendChild(arrow);
+            }
+        });
+
+        // Matter.js iestatījumi
+        const { Engine, Render, Runner, Bodies, Composite, Body, Events } = Matter;
+        const engine = Engine.create({ gravity: { y: 1.2 } });
+        const world = engine.world;
+
+        const render = Render.create({
+            element: document.getElementById('game-container'),
+            engine: engine,
+            options: {
+                width: WIDTH,
+                height: HEIGHT,
+                wireframes: false,
+                background: 'transparent' // Ļauj redzēt CSS gradienta fonu
+            }
+        });
+
+        Render.run(render);
+        const runner = Runner.create();
+        Runner.run(runner, engine);
+
+        // Caurspīdīgi/Skaisti trauka rāmji
+        const wallOptions = { isStatic: true, render: { fillStyle: '#1f2d3d' } };
+        const ground = Bodies.rectangle(WIDTH / 2, HEIGHT - 10, WIDTH, 20, wallOptions);
+        const leftWall = Bodies.rectangle(10, HEIGHT / 2, 20, HEIGHT, wallOptions);
+        const rightWall = Bodies.rectangle(WIDTH - 10, HEIGHT / 2, 20, HEIGHT, wallOptions);
+        Composite.add(world, [ground, leftWall, rightWall]);
+
+        let score = 0;
+        let currentNextIndex = Math.floor(Math.random() * 3);
+        let canDrop = true;
+
+        updateNextPreview();
+
+        function updateNextPreview() {
+            const nextLvl = EVOLUTION_LEVELS[currentNextIndex];
+            const previewEl = document.getElementById('next-name');
+            previewEl.innerText = nextLvl.name;
+            previewEl.style.color = nextLvl.color;
+        }
+
+        function createMeme(x, y, index) {
+            const level = EVOLUTION_LEVELS[index];
+            return Bodies.circle(x, y, level.size, {
+                restitution: 0.2, // Maiga un patīkama atlekšana
+                friction: 0.2,
+                density: 0.001,
+                label: 'pepe',
+                plugin: { levelIndex: index },
+                render: {
+                    fillStyle: level.color,
+                    strokeStyle: '#ffffff',
+                    lineWidth: 3
+                }
+            });
+        }
+
+        // Noklikšķināšana un bumbas nolaišana
+        document.getElementById('game-container').addEventListener('click', (event) => {
+            if (!canDrop) return;
+
+            const rect = event.currentTarget.getBoundingClientRect();
+            let clickX = event.clientX - rect.left;
+
+            const currentSize = EVOLUTION_LEVELS[currentNextIndex].size;
+            // Drošības buferis pie malām
+            if (clickX < 20 + currentSize) clickX = 20 + currentSize;
+            if (clickX > WIDTH - 20 - currentSize) clickX = WIDTH - 20 - currentSize;
+
+            // Nometam bumbu nedaudz zem augšmalas
+            const newMeme = createMeme(clickX, 60, currentNextIndex);
+            Composite.add(world, newMeme);
+
+            canDrop = false;
+            currentNextIndex = Math.floor(Math.random() * 3);
+            updateNextPreview();
+
+            // Ātrāks taimeris (400ms), lai spēle šķistu dinamiskāka
+            setTimeout(() => { canDrop = true; }, 400);
+        });
+
+        // Sadursmju apstrāde un evolūcija
+        Events.on(engine, 'collisionStart', (event) => {
+            const pairs = event.pairs;
+
+            pairs.forEach((pair) => {
+                const bodyA = pair.bodyA;
+                const bodyB = pair.bodyB;
+
+                if (bodyA.label === 'pepe' && bodyB.label === 'pepe') {
+                    const idxA = bodyA.plugin.levelIndex;
+                    const idxB = bodyB.plugin.levelIndex;
+
+                    if (idxA === idxB && idxA < EVOLUTION_LEVELS.length - 1) {
+                        const midX = (bodyA.position.x + bodyB.position.x) / 2;
+                        const midY = (bodyA.position.y + bodyB.position.y) / 2;
+
+                        Composite.remove(world, [bodyA, bodyB]);
+
+                        const nextIdx = idxA + 1;
+                        const upgradedMeme = createMeme(midX, midY, nextIdx);
+
+                        score += EVOLUTION_LEVELS[nextIdx].score;
+                        document.getElementById('score').innerText = score;
+
+                        if (score > highScore) {
+                            highScore = score;
+                            document.getElementById('high-score').innerText = highScore;
+                            localStorage.setItem('pepe_highscore', highScore);
+                        }
+
+                        setTimeout(() => {
+                            Composite.add(world, upgradedMeme);
+                        }, 15);
+                    }
+                }
+            });
+        });
+
+        // Game Over loģika (pārbauda sarkanās svītras pārkāpšanu)
+        setInterval(() => {
+            const allBodies = Composite.allBodies(world);
+            allBodies.forEach(body => {
+                // Ja kāds stabili guļošs Pepe atrodas virs Y=110 līnijas
+                if (body.label === 'pepe' && body.position.y < 110 && body.velocity.y < 0.05) {
+                    alert("Spēle Beigusies! Tavs rezultāts: " + score);
+                    score = 0;
+                    document.getElementById('score').innerText = score;
+                    
+                    const toRemove = allBodies.filter(b => b.label === 'pepe');
+                    Composite.remove(world, toRemove);
+                }
+            });
+        }, 1500);
+
+    </script>
+</body>
+</html>        #next-preview {
             font-size: 14px;
             color: #aaa;
         }
