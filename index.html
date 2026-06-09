@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pepe Evolution - Suika Style Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        #ui {
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        #score {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4caf50;
+        }
+        #game-container {
+            position: relative;
+            border: 4px solid #333;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            background-color: #111;
+        }
+        #next-preview {
+            font-size: 14px;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui">
+        <h1>PEPE EVOLUTION</h1>
+        <div id="score">Punkti: 0</div>
+        <div id="next-preview">Nākamais mēms: <span id="next-name">-</span></div>
+    </div>
+
+    <div id="game-container"></div>
+
+    <script>
+        // --- SPĒLES KONFIGURĀCIJA ---
+        const WIDTH = 450;
+        const HEIGHT = 650;
+        
+        // Mēmu evolūcijas līmeņi (izmērs, krāsa un nosaukums)
+        const EVOLUTION_LEVELS = [
+            { size: 15, color: '#8bc34a', name: 'Kurkulis', score: 2 },
+            { size: 25, color: '#4caf50', name: 'Krupja Seja', score: 4 },
+            { size: 35, color: '#2e7d32', name: 'Skumjais Pepe', score: 8 },
+            { size: 48, color: '#00bcd4', name: 'Laimīgais Pepe', score: 16 },
+            { size: 62, color: '#3f51b5', name: 'Krupis Monks', score: 32 },
+            { size: 78, color: '#ffeb3b', name: 'Zelta EZ Pepe', score: 64 },
+            { size: 95, color: '#ff5722', name: 'GigaChad Pepe', score: 128 }
+        ];
+
+        // --- MATTER.JS MODUĻI ---
+        const { Engine, Render, Runner, Bodies, Composite, Body, Events } = Matter;
+
+        const engine = Engine.create({ gravity: { y: 1.5 } }); // Palielināta gravitācija labākai dinamikai
+        const world = engine.world;
+
+        // Izveidojam vizualizācijas logu (Renderer)
+        const render = Render.create({
+            element: document.getElementById('game-container'),
+            engine: engine,
+            options: {
+                width: WIDTH,
+                height: HEIGHT,
+                wireframes: false, // false, lai redzētu krāsas, nevis tikai līnijas
+                background: '#111'
+            }
+        });
+
+        Render.run(render);
+        const runner = Runner.create();
+        Runner.run(runner, engine);
+
+        // --- PASAULES ROBEŽAS (KRŪZE) ---
+        const wallOptions = { isStatic: true, render: { fillStyle: '#333' } };
+        const ground = Bodies.rectangle(WIDTH / 2, HEIGHT - 10, WIDTH, 20, wallOptions);
+        const leftWall = Bodies.rectangle(10, HEIGHT / 2, 20, HEIGHT, wallOptions);
+        const rightWall = Bodies.rectangle(WIDTH - 10, HEIGHT / 2, 20, HEIGHT, wallOptions);
+        Composite.add(world, [ground, leftWall, rightWall]);
+
+        // --- SPĒLES LOĢIKA ---
+        let score = 0;
+        let currentNextIndex = Math.floor(Math.random() * 3); // Tikai pirmie 3 līmeņi var tikt nomesti
+        let canDrop = true;
+
+        updateNextPreview();
+
+        // Funkcija, kas atjaunina UI informāciju par nākamo mēmu
+        function updateNextPreview() {
+            document.getElementById('next-name').innerText = EVOLUTION_LEVELS[currentNextIndex].name;
+            document.getElementById('next-name').style.color = EVOLUTION_LEVELS[currentNextIndex].color;
+        }
+
+        // Funkcija jauna mēma izveidei
+        function createMeme(x, y, index, isStatic = false) {
+            const level = EVOLUTION_LEVELS[index];
+            const meme = Bodies.circle(x, y, level.size, {
+                restitution: 0.3, // Cik daudz objekts atlec
+                friction: 0.1,
+                label: 'meme',
+                plugin: { levelIndex: index }, // Saglabājam līmeņa indeksu objektā
+                render: {
+                    fillStyle: level.color,
+                    strokeStyle: '#fff',
+                    lineWidth: 2
+                }
+            });
+            
+            if (isStatic) {
+                Body.setStatic(meme, true);
+            }
+            return meme;
+        }
+
+        // Noklikšķināšanas notikums – nomet mēmu krūzē
+        document.getElementById('game-container').addEventListener('click', (event) => {
+            if (!canDrop) return;
+
+            // Aprēķinām peles X pozīciju attiecībā pret spēles laukumu
+            const rect = event.target.getBoundingClientRect();
+            let clickX = event.clientX - rect.left;
+
+            // Neļaujam mēmam iestrēgt sienās pirms nomešanas
+            const currentSize = EVOLUTION_LEVELS[currentNextIndex].size;
+            if (clickX < 20 + currentSize) clickX = 20 + currentSize;
+            if (clickX > WIDTH - 20 - currentSize) clickX = WIDTH - 20 - currentSize;
+
+            // Izveidojam krītošo mēmu
+            const newMeme = createMeme(clickX, 50, currentNextIndex);
+            Composite.add(world, newMeme);
+
+            // Bloķējam nomešanu uz īsu brīdi (taimeris), lai nevarētu samest par daudz uzreiz
+            canDrop = false;
+            currentNextIndex = Math.floor(Math.random() * 3); // Izvēlas nākamo nejaušo
+            updateNextPreview();
+
+            setTimeout(() => { canDrop = true; }, 500);
+        });
+
+        // --- SADURSMJU KONTROLE (SABIEDRĪBA / EVOLŪCIJA) ---
+        Events.on(engine, 'collisionStart', (event) => {
+            const pairs = event.pairs;
+
+            pairs.forEach((pair) => {
+                const bodyA = pair.bodyA;
+                const bodyB = pair.bodyB;
+
+                // Pārbaudām, vai abi objekti ir mēmi
+                if (bodyA.label === 'meme' && bodyB.label === 'meme') {
+                    const indexA = bodyA.plugin.levelIndex;
+                    const indexB = bodyB.plugin.levelIndex;
+
+                    // Ja tie ir viena līmeņa mēmi un vēl nav iznīcināti šajā gājienā
+                    if (indexA === indexB && indexA < EVOLUTION_LEVELS.length - 1) {
+                        // Aprēķinām viduspunktu, kur abas bumbas saskārās
+                        const midX = (bodyA.position.x + bodyB.position.x) / 2;
+                        const midY = (bodyA.position.y + bodyB.position.y) / 2;
+
+                        // Dzēšam vecos objektus no pasaules
+                        Composite.remove(world, [bodyA, bodyB]);
+
+                        // Izveidojam jaunu, lielāku mēmu evolūcijas vietā
+                        const nextIndex = indexA + 1;
+                        const upgradedMeme = createMeme(midX, midY, nextIndex);
+                        
+                        // Pievienojam punktus
+                        score += EVOLUTION_LEVELS[nextIndex].score;
+                        document.getElementById('score').innerText = "Punkti: " + score;
+
+                        // Pievienojam jauno mēmu spēlei
+                        // Izmantojam setTimeout, lai Matter.js nepārtrauktu sadursmju ciklu vidū
+                        setTimeout(() => {
+                            Composite.add(world, upgradedMeme);
+                        }, 10);
+                    }
+                }
+            });
+        });
+
+        // --- SPĒLES BEIGU PĀRBAUDE (Virs svītras) ---
+        setInterval(() => {
+            const allBodies = Composite.allBodies(world);
+            allBodies.forEach(body => {
+                // Ja kāds mēms atrodas pārāk augstu (virs Y=100) un nav tikko nomests
+                if (body.label === 'meme' && body.position.y < 100 && body.velocity.y < 0.1) {
+                    // Vienkāršs Game Over paziņojums
+                    alert("Spēle Beigusies! Tavs rezultāts: " + score);
+                    score = 0;
+                    document.getElementById('score').innerText = "Punkti: " + score;
+                    // Notīrām krūzi
+                    const memesToRemove = allBodies.filter(b => b.label === 'meme');
+                    Composite.remove(world, memesToRemove);
+                }
+            });
+        }, 2000); // Pārbauda ik pēc 2 sekundēm
+
+    </script>
+</body>
+</html>
