@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pepe's Big Merge - EXTREME NIGHTMARE</title>
+    <title>Pepe's Big Merge - CHAOS STORM</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <style>
         :root {
-            --bg-dark: #030406;
-            --panel-bg: rgba(10, 12, 18, 0.95);
+            --bg-dark: #020305;
+            --panel-bg: rgba(8, 10, 15, 0.95);
             --pepe-green: #39ff14;
-            --neon-blue: #00f0ff;
-            --neon-red: #ff0000;
+            --neon-cyan: #00ffff;
+            --neon-magenta: #ff00ff;
+            --neon-orange: #ffaa00;
             --text-main: #ffffff;
-            --text-muted: #4f6174;
         }
 
         body {
@@ -21,8 +21,8 @@
             padding: 0;
             background-color: var(--bg-dark);
             background-image: 
-                radial-gradient(at 50% 100%, rgba(21fa, 0, 0, 0.12) 0px, transparent 50%),
-                radial-gradient(at 50% 0%, rgba(0, 0, 0, 0.8) 0px, transparent 100%);
+                radial-gradient(at 50% 100%, rgba(0, 255, 255, 0.08) 0px, transparent 50%),
+                radial-gradient(at 0% 0%, rgba(255, 0, 255, 0.05) 0px, transparent 40%);
             color: var(--text-main);
             font-family: 'Segoe UI', Roboto, sans-serif;
             display: flex;
@@ -35,33 +35,31 @@
 
         #header-panel {
             text-align: center;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         h1 {
-            font-size: 28px;
+            font-size: 30px;
             font-weight: 900;
-            margin: 0 0 5px 0;
-            letter-spacing: 2px;
-            background: linear-gradient(90deg, var(--neon-red), #ff5500);
+            margin: 0;
+            letter-spacing: 3px;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 12px var(--neon-red));
+            filter: drop-shadow(0 0 10px var(--neon-cyan));
         }
 
-        .difficulty-badge {
-            background: linear-gradient(45deg, #ff0000, #550000);
-            color: #fff;
-            font-size: 10px;
-            font-weight: 900;
-            padding: 3px 12px;
-            border-radius: 4px;
+        #event-banner {
+            height: 20px;
+            font-size: 11px;
+            font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 3px;
-            display: inline-block;
-            margin-bottom: 8px;
-            box-shadow: 0 0 15px var(--neon-red);
-            border: 1px solid rgba(255,255,255,0.2);
+            letter-spacing: 2px;
+            color: #ff3333;
+            margin-top: 5px;
+            text-shadow: 0 0 8px #ff3333;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         .stats-container {
@@ -70,21 +68,18 @@
             background: var(--panel-bg);
             padding: 8px 16px;
             border-radius: 12px;
-            border: 2px solid var(--neon-red);
-            box-shadow: 0 0 25px rgba(255, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.7);
         }
 
         .stat-box {
             text-align: center;
             min-width: 75px;
-            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-
-        .stat-box.pulse { transform: scale(1.2) rotate(-2deg); }
 
         .stat-label {
             font-size: 8px;
-            color: var(--text-muted);
+            color: #5d7185;
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 2px;
@@ -96,18 +91,17 @@
         }
 
         #score { color: var(--pepe-green); }
-        #next-name { color: var(--neon-blue); }
+        #combo-box { color: var(--neon-orange); text-shadow: 0 0 8px var(--neon-orange); }
         #high-score { color: #ffcc00; }
 
-        /* Konteiners ar kratīšanās animācijas klasi */
         #game-wrapper {
             position: relative;
             padding: 6px;
-            background: rgba(255, 0, 0, 0.03);
+            background: rgba(0, 255, 255, 0.03);
             border-radius: 20px;
-            border: 2px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 0 40px rgba(0,0,0,0.8);
-            transition: transform 0.05s linear;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 35px rgba(0,0,0,0.5);
+            transition: transform 0.05s ease;
         }
 
         #game-container {
@@ -118,7 +112,7 @@
         }
 
         #evolution-path {
-            margin-top: 15px;
+            margin-top: 12px;
             background: var(--panel-bg);
             padding: 8px 12px;
             border-radius: 12px;
@@ -139,50 +133,45 @@
         }
 
         .evo-img {
-            width: 28px;
-            height: 28px;
+            width: 26px;
+            height: 26px;
             object-fit: contain;
         }
 
         #danger-line {
             position: absolute;
-            top: 140px; /* Vēl mazāk vietas augšā */
+            top: 140px;
             left: 6px;
             width: 340px;
             height: 2px;
-            background: repeating-linear-gradient(90deg, #ff0000, #ff0000 8px, transparent 8px, transparent 16px);
-            box-shadow: 0 0 8px #ff0000;
+            background: linear-gradient(90deg, transparent, #ff0055, transparent);
+            box-shadow: 0 0 10px #ff0055;
             z-index: 10;
         }
 
-        /* Ekrāna kratīšanās efekts */
         @keyframes shake {
-            0% { transform: translate(0, 0); }
-            20% { transform: translate(-4px, 3px); }
-            40% { transform: translate(4px, -3px); }
-            60% { transform: translate(-3px, -2px); }
-            80% { transform: translate(3px, 2px); }
-            100% { transform: translate(0, 0); }
+            0% { transform: translate(0,0); }
+            25% { transform: translate(-3px, 2px); }
+            50% { transform: translate(3px, -2px); }
+            75% { transform: translate(-2px, -1px); }
+            100% { transform: translate(0,0); }
         }
-
-        .shake-active {
-            animation: shake 0.15s linear infinite;
-        }
+        .shake { animation: shake 0.12s linear infinite; }
     </style>
 </head>
 <body>
 
     <div id="header-panel">
-        <div class="difficulty-badge">NIGHTMARE</div>
-        <h1>Pepe's Big Merge</h1>
-        <div class="stats-container">
-            <div class="stat-box" id="score-box">
+        <h1>Pepe's Chaos Storm</h1>
+        <div id="event-banner">GRAVITĀCIJAS ANOMĀLIJA!</div>
+        <div class="stats-container" style="margin-top: 5px;">
+            <div class="stat-box">
                 <div class="stat-label">Punkti</div>
                 <div id="score" class="stat-value">0</div>
             </div>
-            <div class="stat-box" style="border-left: 1px solid rgba(255,255,255,0.08); border-right: 1px solid rgba(255,255,255,0.08); padding: 0 8px; min-width: 100px;">
-                <div class="stat-label">Nākamais</div>
-                <div id="next-name" class="stat-value">-</div>
+            <div class="stat-box" style="border-left: 1px solid rgba(255,255,255,0.08); border-right: 1px solid rgba(255,255,255,0.08); padding: 0 10px;">
+                <div class="stat-label">Combo</div>
+                <div id="combo-box" class="stat-value">x1</div>
             </div>
             <div class="stat-box">
                 <div class="stat-label">Labākais</div>
@@ -199,17 +188,16 @@
     <div id="evolution-path"></div>
 
     <script>
-        // EKSTREMTI ŠAURS LAUKUMS: Tikai 340px platums!
         const WIDTH = 340;
-        const HEIGHT = 630;
+        const HEIGHT = 620;
         
         const EVOLUTION_LEVELS = [
-            { size: 22, score: 2, name: 'Kurkulis', img: 'pepe1.png', color: '#39ff14', glow: 'rgba(57, 255, 20, 0.15)' },
-            { size: 30, score: 4, name: 'Krupis', img: 'pepe2.png', color: '#00f0ff', glow: 'rgba(0, 240, 255, 0.15)' },
-            { size: 42, score: 8, name: 'Sad Pepe', img: 'pepe3.png', color: '#ff0055', glow: 'rgba(255, 0, 85, 0.15)' },
-            { size: 54, score: 16, name: 'Chad Pepe', img: 'pepe4.png', color: '#ffcc00', glow: 'rgba(255, 204, 0, 0.15)' },
-            { size: 68, score: 32, name: 'Monk Pepe', img: 'pepe5.png', color: '#b026ff', glow: 'rgba(176, 38, 255, 0.15)' },
-            { size: 86, score: 64, name: 'Giga Chad', img: 'pepe6.png', color: '#ff2a00', glow: 'rgba(255, 42, 0, 0.2)' }
+            { size: 20, score: 2, name: 'Kurkulis', img: 'pepe1.png', color: '#39ff14', glow: 'rgba(57, 255, 20, 0.15)' },
+            { size: 28, score: 4, name: 'Krupis', img: 'pepe2.png', color: '#00ffff', glow: 'rgba(0, 255, 255, 0.15)' },
+            { size: 38, score: 8, name: 'Sad Pepe', img: 'pepe3.png', color: '#ff00ff', glow: 'rgba(255, 0, 255, 0.15)' },
+            { size: 50, score: 16, name: 'Chad Pepe', img: 'pepe4.png', color: '#ffaa00', glow: 'rgba(255, 170, 0, 0.15)' },
+            { size: 66, score: 32, name: 'Monk Pepe', img: 'pepe5.png', color: '#b026ff', glow: 'rgba(176, 38, 255, 0.15)' },
+            { size: 84, score: 64, name: 'Giga Chad', img: 'pepe6.png', color: '#ff2a00', glow: 'rgba(255, 42, 0, 0.2)' }
         ];
 
         let highScore = localStorage.getItem('pepe_highscore') || 0;
@@ -219,78 +207,82 @@
         EVOLUTION_LEVELS.forEach((lvl) => {
             const step = document.createElement('div');
             step.className = 'evo-step';
-            step.innerHTML = `
-                <img class="evo-img" src="${lvl.img}" onerror="this.style.opacity='0.4';">
-                <div style="color: ${lvl.color}; font-weight:600; scale: 0.9;">${lvl.name}</div>
-            `;
+            step.innerHTML = `<img class="evo-img" src="${lvl.img}" onerror="this.style.opacity='0.4';">`;
             evoPathContainer.appendChild(step);
         });
 
-        const { Engine, Render, Runner, Bodies, Composite, Body, Events } = Matter;
-        const engine = Engine.create({ gravity: { y: 1.5 } }); // Ļoti smaga un ātra gravitācija
+        const { Engine, Render, Runner, Bodies, Composite, Body, Events, Vector } = Matter;
+        const engine = Engine.create({ gravity: { y: 1.4, x: 0 } });
         const world = engine.world;
 
         const render = Render.create({
             element: document.getElementById('game-container'),
             engine: engine,
-            options: {
-                width: WIDTH,
-                height: HEIGHT,
-                wireframes: false,
-                background: '#040609'
-            }
+            options: { width: WIDTH, height: HEIGHT, wireframes: false, background: '#05070a' }
         });
 
         Render.run(render);
         const runner = Runner.create();
         Runner.run(runner, engine);
 
-        const wallOptions = { isStatic: true, friction: 0.01, render: { fillStyle: '#10151d' } };
+        const wallOptions = { isStatic: true, friction: 0.02, render: { fillStyle: '#0d1117' } };
         const ground = Bodies.rectangle(WIDTH / 2, HEIGHT - 6, WIDTH, 12, wallOptions);
         const leftWall = Bodies.rectangle(6, HEIGHT / 2, 12, HEIGHT, wallOptions);
         const rightWall = Bodies.rectangle(WIDTH - 6, HEIGHT / 2, 12, HEIGHT, wallOptions);
         Composite.add(world, [ground, leftWall, rightWall]);
 
         let score = 0;
-        // BRŪTĀK: Dod nejauši no pirmajiem ČETRIEM līmeņiem (Kurkulis līdz Chad Pepe)
         let currentNextIndex = Math.floor(Math.random() * 4); 
         let canDrop = true;
         let mouseX = WIDTH / 2;
+        
+        let comboCount = 0;
+        let lastMergeTime = 0;
 
-        updateNextPreview();
+        // HAOSS: Sānu anomāliju taimeris
+        setInterval(() => {
+            const r = Math.random();
+            const banner = document.getElementById('event-banner');
+            
+            if (r < 0.4) {
+                // Vējš pa kreisi
+                engine.gravity.x = -0.4;
+                banner.innerText = "🌀 SĀNU VĒJŠ: PA KREISI!";
+                banner.style.color = "var(--neon-cyan)";
+                banner.style.opacity = 1;
+            } else if (r < 0.8) {
+                // Vējš pa labi
+                engine.gravity.x = 0.4;
+                banner.innerText = "🌀 SĀNU VĒJŠ: PA LABI!";
+                banner.style.color = "var(--neon-magenta)";
+                banner.style.opacity = 1;
+            } else {
+                // Anti-gravitācija (viss kļūst viegls uz sekundi)
+                engine.gravity.y = 0.3;
+                banner.innerText = "🎈 ZERO GRAVITY ANOMĀLIJA!";
+                banner.style.color = "var(--neon-orange)";
+                banner.style.opacity = 1;
+            }
 
-        function updateNextPreview() {
-            const nextLvl = EVOLUTION_LEVELS[currentNextIndex];
-            const nameDiv = document.getElementById('next-name');
-            nameDiv.innerText = nextLvl.name;
-            nameDiv.style.color = nextLvl.color;
-        }
-
-        function triggerScreenShake() {
-            const wrapper = document.getElementById('game-wrapper');
-            wrapper.classList.add('shake-active');
             setTimeout(() => {
-                wrapper.classList.remove('shake-active');
-            }, 150);
-        }
+                engine.gravity.x = 0;
+                engine.gravity.y = 1.4;
+                banner.style.opacity = 0;
+            }, 3000); // Anomālija ilgst 3 sekundes
+
+        }, 14000);
 
         function createMeme(x, y, index) {
             const level = EVOLUTION_LEVELS[index];
             const targetWidth = level.size * 2;
             
             const meme = Bodies.circle(x, y, level.size, {
-                restitution: 0.4, // Augsts atlēciens un lēkāšana
-                friction: 0.05,  // Ļoti slidenas bumbas
-                density: 0.01 * (index + 1), // Smagākie tēli burtiski saspiež mazākos
+                restitution: 0.3,
+                friction: 0.04,
+                density: 0.01 * (index + 1),
                 label: 'pepe',
                 plugin: { levelIndex: index, color: level.color, glow: level.glow },
-                render: {
-                    sprite: {
-                        texture: level.img,
-                        xScale: targetWidth / 250, 
-                        yScale: targetWidth / 250
-                    }
-                }
+                render: { sprite: { texture: level.img, xScale: targetWidth/250, yScale: targetWidth/250 } }
             });
 
             const imgObj = new Image();
@@ -300,14 +292,12 @@
                 meme.render.sprite.xScale = targetWidth / maxDimension;
                 meme.render.sprite.yScale = targetWidth / maxDimension;
             };
-
             return meme;
         }
 
         document.getElementById('game-container').addEventListener('mousemove', (event) => {
             const rect = event.currentTarget.getBoundingClientRect();
             mouseX = event.clientX - rect.left;
-            
             const currentSize = EVOLUTION_LEVELS[currentNextIndex].size;
             if (mouseX < 12 + currentSize) mouseX = 12 + currentSize;
             if (mouseX > WIDTH - 12 - currentSize) mouseX = WIDTH - 12 - currentSize;
@@ -321,17 +311,16 @@
                 const nextLvl = EVOLUTION_LEVELS[currentNextIndex];
                 context.save();
                 context.beginPath();
-                context.setLineDash([3, 5]);
+                context.setLineDash([2, 4]);
                 context.moveTo(mouseX, 80);
                 context.lineTo(mouseX, HEIGHT - 12);
-                context.strokeStyle = 'rgba(255, 0, 0, 0.25)';
+                context.strokeStyle = 'rgba(0, 255, 255, 0.2)';
                 context.stroke();
                 
                 context.beginPath();
                 context.arc(mouseX, 80, nextLvl.size, 0, 2 * Math.PI);
                 context.fillStyle = nextLvl.glow;
                 context.strokeStyle = nextLvl.color;
-                context.lineWidth = 1;
                 context.fill();
                 context.stroke();
                 context.restore();
@@ -341,14 +330,11 @@
                 if (body.label === 'pepe') {
                     const index = body.plugin.levelIndex;
                     const size = EVOLUTION_LEVELS[index].size;
-                    const color = body.plugin.color;
-                    const glow = body.plugin.glow;
-
                     context.save();
                     context.beginPath();
                     context.arc(body.position.x, body.position.y, size - 1, 0, 2 * Math.PI);
-                    context.fillStyle = glow;
-                    context.strokeStyle = color;
+                    context.fillStyle = body.plugin.glow;
+                    context.strokeStyle = body.plugin.color;
                     context.lineWidth = 2;
                     context.fill();
                     context.stroke();
@@ -359,20 +345,16 @@
 
         document.getElementById('game-container').addEventListener('click', () => {
             if (!canDrop) return;
-
             const newMeme = createMeme(mouseX, 80, currentNextIndex);
-            
-            // Ekstrēma rotācija gaisā
-            const extremeAngularVelocity = (Math.random() - 0.5) * 0.35;
-            Body.setAngularVelocity(newMeme, extremeAngularVelocity);
-            
+            Body.setAngularVelocity(newMeme, (Math.random() - 0.5) * 0.2);
             Composite.add(world, newMeme);
 
             canDrop = false;
-            currentNextIndex = Math.floor(Math.random() * 4); // Random starp 4 tēliem
-            updateNextPreview();
+            currentNextIndex = Math.floor(Math.random() * 4);
+            document.getElementById('next-name').innerText = EVOLUTION_LEVELS[currentNextIndex].name;
+            document.getElementById('next-name').style.color = EVOLUTION_LEVELS[currentNextIndex].color;
 
-            setTimeout(() => { canDrop = true; }, 300);
+            setTimeout(() => { canDrop = true; }, 280);
         });
 
         Events.on(engine, 'collisionStart', (event) => {
@@ -395,22 +377,40 @@
                         const nextIdx = idxA + 1;
                         const upgradedMeme = createMeme(midX, midY, nextIdx);
 
-                        // Ekstrēms sprādziena grūdiens apvienojoties
-                        const pushForce = 0.02;
-                        Body.applyForce(upgradedMeme, upgradedMeme.position, {
-                            x: (Math.random() - 0.5) * pushForce,
-                            y: -pushForce
-                        });
+                        // COMBO SISTĒMA
+                        const now = Date.now();
+                        if (now - lastMergeTime < 2500) {
+                            comboCount++;
+                        } else {
+                            comboCount = 1;
+                        }
+                        lastMergeTime = now;
+                        document.getElementById('combo-box').innerText = "x" + comboCount;
 
-                        // Ekrāna kratīšana un punktu animācija
-                        triggerScreenShake();
-                        score += EVOLUTION_LEVELS[nextIdx].score;
-                        const scoreDiv = document.getElementById('score');
-                        const scoreBox = document.getElementById('score-box');
-                        scoreDiv.innerText = score;
-                        
-                        scoreBox.classList.add('pulse');
-                        setTimeout(() => scoreBox.classList.remove('pulse'), 100);
+                        // KRITISKAIS SPRĀDZIENS: liela apvienošanās pagrūž pārējos objektus prom
+                        if (nextIdx >= 3) {
+                            const allBodies = Composite.allBodies(world);
+                            allBodies.forEach(b => {
+                                if (b.label === 'pepe') {
+                                    const forceVec = Vector.sub(b.position, {x: midX, y: midY});
+                                    const dist = Vector.magnitude(forceVec);
+                                    if (dist < 120 && dist > 0) {
+                                        const pushMultiplier = 0.005 * (comboCount);
+                                        Body.applyForce(b, b.position, {
+                                            x: (forceVec.x / dist) * pushMultiplier,
+                                            y: -0.003
+                                        });
+                                    }
+                                }
+                            });
+                            // Ekrāna kratīšana
+                            const wrapper = document.getElementById('game-wrapper');
+                            wrapper.classList.add('shake');
+                            setTimeout(() => wrapper.classList.remove('shake'), 150);
+                        }
+
+                        score += EVOLUTION_LEVELS[nextIdx].score * comboCount;
+                        document.getElementById('score').innerText = score;
 
                         if (score > highScore) {
                             highScore = score;
@@ -418,28 +418,26 @@
                             localStorage.setItem('pepe_highscore', highScore);
                         }
 
-                        setTimeout(() => {
-                            Composite.add(world, upgradedMeme);
-                        }, 10);
+                        setTimeout(() => { Composite.add(world, upgradedMeme); }, 10);
                     }
                 }
             });
         });
 
-        // EKSTRĒMI ĀTRS TAIMERIS: Zaudējumu pārbauda ik pēc 600ms
+        // Taimeris zaudēšanai
         setInterval(() => {
             const allBodies = Composite.allBodies(world);
             allBodies.forEach(body => {
                 if (body.label === 'pepe' && body.position.y < 140 && body.velocity.y < 0.02) {
-                    alert("NIGHTMARE OVER! Rezultāts: " + score);
+                    alert("CHAOS OVERCOAT! Rezultāts: " + score);
                     score = 0;
+                    comboCount = 1;
                     document.getElementById('score').innerText = score;
-                    
-                    const toRemove = allBodies.filter(b => b.label === 'pepe');
-                    Composite.remove(world, toRemove);
+                    document.getElementById('combo-box').innerText = "x1";
+                    Composite.remove(world, allBodies.filter(b => b.label === 'pepe'));
                 }
             });
-        }, 600);
+        }, 700);
 
     </script>
 </body>
