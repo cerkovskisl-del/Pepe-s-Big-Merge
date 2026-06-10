@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pepe's Big Merge</title>
+    <title>Pepe's Big Merge - Real Images</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <style>
         :root {
@@ -25,16 +25,16 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
         #header-panel {
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
 
         h1 {
-            font-size: 28px;
+            font-size: 32px;
             margin: 0 0 10px 0;
             color: var(--pepe-green);
             text-transform: uppercase;
@@ -44,27 +44,29 @@
 
         .stats-container {
             display: flex;
-            gap: 15px;
+            gap: 20px;
             background: var(--panel-bg);
-            padding: 8px 20px;
+            padding: 10px 25px;
             border-radius: 12px;
             border: 1px solid #233243;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
         .stat-box {
             text-align: center;
-            min-width: 90px;
         }
 
         .stat-label {
-            font-size: 10px;
+            font-size: 11px;
             color: #7f93a7;
             text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .stat-value {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
+            color: var(--text-color);
         }
 
         #next-name {
@@ -73,7 +75,7 @@
 
         #game-wrapper {
             position: relative;
-            padding: 8px;
+            padding: 10px;
             background: radial-gradient(circle, #17222e 0%, #0b0f14 100%);
             border-radius: 20px;
             border: 2px solid #1f2d3d;
@@ -83,19 +85,18 @@
             position: relative;
             border-radius: 14px;
             overflow: hidden;
-            background-color: #11161c;
         }
 
         /* Evolūcijas josla apakšā */
         #evolution-path {
-            margin-top: 15px;
+            margin-top: 20px;
             background: var(--panel-bg);
-            padding: 10px 15px;
+            padding: 12px 20px;
             border-radius: 12px;
             border: 1px solid #233243;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
             max-width: 450px;
             overflow-x: auto;
         }
@@ -104,17 +105,16 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            font-size: 10px;
+            font-size: 11px;
             min-width: 65px;
             text-align: center;
         }
 
-        .evo-dot {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
+        .evo-img {
+            width: 35px;
+            height: 35px;
+            object-fit: contain;
             margin-bottom: 4px;
-            border: 1px solid #fff;
         }
 
         .evo-arrow {
@@ -125,11 +125,11 @@
         #danger-line {
             position: absolute;
             top: 110px;
-            left: 8px;
+            left: 10px;
             width: 450px;
             height: 2px;
             background: repeating-linear-gradient(90deg, #ff3333, #ff3333 10px, transparent 10px, transparent 20px);
-            opacity: 0.5;
+            opacity: 0.6;
             pointer-events: none;
             z-index: 10;
         }
@@ -144,12 +144,12 @@
                 <div class="stat-label">Punkti</div>
                 <div id="score" class="stat-value">0</div>
             </div>
-            <div class="stat-box" style="border-left: 1px solid #233243; border-right: 1px solid #233243; padding: 0 10px; min-width: 140px;">
-                <div class="stat-label">Nākamais</div>
+            <div class="stat-box" style="border-left: 1px solid #233243; border-right: 1px solid #233243; padding: 0 20px;">
+                <div class="stat-label">Nākamais Pepe</div>
                 <div id="next-name" class="stat-value">-</div>
             </div>
             <div class="stat-box">
-                <div class="stat-label">Labākais</div>
+                <div class="stat-label">Labākais Rezultāts</div>
                 <div id="high-score" class="stat-value">0</div>
             </div>
         </div>
@@ -164,28 +164,28 @@
 
     <script>
         const WIDTH = 450;
-        const HEIGHT = 630;
+        const HEIGHT = 650;
         
-        // --- TAVI 6 LIETOJAMIE PEPE LĪMEŅI ---
+        // Saraksts ar tieši taviem izvēlētajiem 6 Pepe tēliem
         const EVOLUTION_LEVELS = [
-            { size: 22, score: 2,   name: 'Kurkulis',      color: '#8bc34a', textCol: '#000' },
-            { size: 32, score: 4,   name: 'Krupis',        color: '#4caf50', textCol: '#fff' },
-            { size: 45, score: 8,   name: 'Sad Pepe',      color: '#2e7d32', textCol: '#fff' },
-            { size: 60, score: 16,  name: 'Chad Pepe',     color: '#00bcd4', textCol: '#000' },
-            { size: 78, score: 32,  name: 'Monk Pepe',     color: '#9c27b0', textCol: '#fff' },
-            { size: 98, score: 64,  name: 'Giga Chad',     color: '#f44336', textCol: '#fff' }
+            { size: 22, score: 2, name: 'Kurkulis', img: 'pepe1.png' },
+            { size: 32, score: 4, name: 'Krupis', img: 'pepe2.png' },
+            { size: 45, score: 8, name: 'Sad Pepe', img: 'pepe3.png' },
+            { size: 60, score: 16, name: 'Chad Pepe', img: 'pepe4.png' },
+            { size: 78, score: 32, name: 'Monk Pepe', img: 'pepe5.png' },
+            { size: 98, score: 64, name: 'Giga Chad', img: 'pepe6.png' }
         ];
 
         let highScore = localStorage.getItem('pepe_highscore') || 0;
         document.getElementById('high-score').innerText = highScore;
 
-        // Izveidojam evolūcijas ceļvedi lapas apakšā
+        // Izveidojam vizuālo ceļvedi apakšā ar taviem attēliem
         const evoPathContainer = document.getElementById('evolution-path');
         EVOLUTION_LEVELS.forEach((lvl, idx) => {
             const step = document.createElement('div');
             step.className = 'evo-step';
             step.innerHTML = `
-                <div class="evo-dot" style="background:${lvl.color};"></div>
+                <img class="evo-img" src="${lvl.img}" onerror="this.style.display='none';">
                 <div style="color:#a1b5cc; font-weight:600;">${lvl.name}</div>
             `;
             evoPathContainer.appendChild(step);
@@ -208,7 +208,7 @@
                 width: WIDTH,
                 height: HEIGHT,
                 wireframes: false,
-                background: '#11161c'
+                background: 'transparent'
             }
         });
 
@@ -216,7 +216,6 @@
         const runner = Runner.create();
         Runner.run(runner, engine);
 
-        // Trauka sienas
         const wallOptions = { isStatic: true, render: { fillStyle: '#1f2d3d' } };
         const ground = Bodies.rectangle(WIDTH / 2, HEIGHT - 10, WIDTH, 20, wallOptions);
         const leftWall = Bodies.rectangle(10, HEIGHT / 2, 20, HEIGHT, wallOptions);
@@ -224,7 +223,8 @@
         Composite.add(world, [ground, leftWall, rightWall]);
 
         let score = 0;
-        let currentNextIndex = Math.floor(Math.random() * 2); // Nomešanai dod tikai pirmos 2 līmeņus
+        // Nomešanai nejauši izvēlas tikai starp pirmajiem 2 līmeņiem (Kurkuli vai Krupi)
+        let currentNextIndex = Math.floor(Math.random() * 2); 
         let canDrop = true;
 
         updateNextPreview();
@@ -232,54 +232,36 @@
         function updateNextPreview() {
             const nextLvl = EVOLUTION_LEVELS[currentNextIndex];
             document.getElementById('next-name').innerText = nextLvl.name;
-            document.getElementById('next-name').style.color = nextLvl.color;
         }
 
         function createMeme(x, y, index) {
             const level = EVOLUTION_LEVELS[index];
+            const targetWidth = level.size * 2;
             
-            return Bodies.circle(x, y, level.size, {
+            const meme = Bodies.circle(x, y, level.size, {
                 restitution: 0.2,
                 friction: 0.1,
                 label: 'pepe',
-                plugin: { levelIndex: index, name: level.name, textColor: level.textCol },
+                plugin: { levelIndex: index },
                 render: {
-                    fillStyle: level.color,
-                    strokeStyle: '#ffffff',
-                    lineWidth: 3
+                    sprite: {
+                        texture: level.img,
+                        xScale: targetWidth / 200, 
+                        yScale: targetWidth / 200
+                    }
                 }
             });
+
+            const imgObj = new Image();
+            imgObj.src = level.img;
+            imgObj.onload = function() {
+                meme.render.sprite.xScale = targetWidth / this.width;
+                meme.render.sprite.yScale = targetWidth / this.height;
+            };
+
+            return meme;
         }
 
-        // Zīmēšanas loģika: uzraksta Pepe līmeņa nosaukumu virsū katrai bumbai
-        Events.on(render, 'afterRender', () => {
-            const context = render.context;
-            const bodies = Composite.allBodies(world);
-
-            bodies.forEach(body => {
-                if (body.label === 'pepe') {
-                    const name = body.plugin.name;
-                    const textColor = body.plugin.textColor;
-                    const index = body.plugin.levelIndex;
-                    const size = EVOLUTION_LEVELS[index].size;
-
-                    context.save();
-                    context.translate(body.position.x, body.position.y);
-                    context.rotate(body.angle);
-                    
-                    // Izvēlas teksta izmēru atkarībā no bumbas lieluma
-                    context.font = `bold ${size * 0.3}px Arial`;
-                    context.fillStyle = textColor;
-                    context.textAlign = 'center';
-                    context.textBaseline = 'middle';
-                    context.fillText(name, 0, 0);
-                    
-                    context.restore();
-                }
-            });
-        });
-
-        // Klikšķis, lai nomestu
         document.getElementById('game-container').addEventListener('click', (event) => {
             if (!canDrop) return;
 
@@ -294,13 +276,12 @@
             Composite.add(world, newMeme);
 
             canDrop = false;
-            currentNextIndex = Math.floor(Math.random() * 2); // Atkal nejaušs kurkulis vai krupis
+            currentNextIndex = Math.floor(Math.random() * 2); // Atkal izvēlas Kurkuli vai Krupi nākamajam metienam
             updateNextPreview();
 
             setTimeout(() => { canDrop = true; }, 400);
         });
 
-        // Apvienošanās loģika (Evolūcija)
         Events.on(engine, 'collisionStart', (event) => {
             const pairs = event.pairs;
 
@@ -338,12 +319,11 @@
             });
         });
 
-        // Zaudēšanas pārbaude (Sarkanā līnija)
         setInterval(() => {
             const allBodies = Composite.allBodies(world);
             allBodies.forEach(body => {
                 if (body.label === 'pepe' && body.position.y < 110 && body.velocity.y < 0.05) {
-                    alert("Spēle Beigusies! Rezultāts: " + score);
+                    alert("Spēle Beigusies! Tavs rezultāts: " + score);
                     score = 0;
                     document.getElementById('score').innerText = score;
                     
