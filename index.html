@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pepe's Big Merge - Real Images</title>
+    <title>Pepe's Big Merge - Fixed Hitboxes</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <style>
         :root {
@@ -166,20 +166,20 @@
         const WIDTH = 450;
         const HEIGHT = 650;
         
-        // Saraksts ar tieši taviem izvēlētajiem 6 Pepe tēliem
+        // Atjaunoti izmēri (rādiusi), lai tie perfekti atbilstu bildes proporcijām
         const EVOLUTION_LEVELS = [
-            { size: 22, score: 2, name: 'Kurkulis', img: 'pepe1.png' },
-            { size: 32, score: 4, name: 'Krupis', img: 'pepe2.png' },
-            { size: 45, score: 8, name: 'Sad Pepe', img: 'pepe3.png' },
-            { size: 60, score: 16, name: 'Chad Pepe', img: 'pepe4.png' },
-            { size: 78, score: 32, name: 'Monk Pepe', img: 'pepe5.png' },
-            { size: 98, score: 64, name: 'Giga Chad', img: 'pepe6.png' }
+            { size: 24, score: 2, name: 'Kurkulis', img: 'pepe1.png', color: 'rgba(139, 195, 74, 0.15)' },
+            { size: 34, score: 4, name: 'Krupis', img: 'pepe2.png', color: 'rgba(76, 175, 80, 0.15)' },
+            { size: 46, score: 8, name: 'Sad Pepe', img: 'pepe3.png', color: 'rgba(33, 150, 243, 0.15)' },
+            { size: 58, score: 16, name: 'Chad Pepe', img: 'pepe4.png', color: 'rgba(0, 188, 212, 0.15)' },
+            { size: 74, score: 32, name: 'Monk Pepe', img: 'pepe5.png', color: 'rgba(156, 39, 176, 0.15)' },
+            { size: 94, score: 64, name: 'Giga Chad', img: 'pepe6.png', color: 'rgba(244, 67, 54, 0.15)' }
         ];
 
         let highScore = localStorage.getItem('pepe_highscore') || 0;
         document.getElementById('high-score').innerText = highScore;
 
-        // Izveidojam vizuālo ceļvedi apakšā ar taviem attēliem
+        // Izveidojam vizuālo ceļvedi apakšā
         const evoPathContainer = document.getElementById('evolution-path');
         EVOLUTION_LEVELS.forEach((lvl, idx) => {
             const step = document.createElement('div');
@@ -223,7 +223,6 @@
         Composite.add(world, [ground, leftWall, rightWall]);
 
         let score = 0;
-        // Nomešanai nejauši izvēlas tikai starp pirmajiem 2 līmeņiem (Kurkuli vai Krupi)
         let currentNextIndex = Math.floor(Math.random() * 2); 
         let canDrop = true;
 
@@ -242,25 +241,52 @@
                 restitution: 0.2,
                 friction: 0.1,
                 label: 'pepe',
-                plugin: { levelIndex: index },
+                plugin: { levelIndex: index, color: level.color },
                 render: {
                     sprite: {
                         texture: level.img,
-                        xScale: targetWidth / 200, 
-                        yScale: targetWidth / 200
+                        xScale: targetWidth / 300, // Sākotnējais minējums līdz bilde ielādējas
+                        yScale: targetWidth / 300
                     }
                 }
             });
 
+            // Šis pārrēķina precīzu mērogu neatkarīgi no tā, cik liels vai mazs ir pats PNG fails
             const imgObj = new Image();
             imgObj.src = level.img;
             imgObj.onload = function() {
-                meme.render.sprite.xScale = targetWidth / this.width;
-                meme.render.sprite.yScale = targetWidth / this.height;
+                // Atrod lielāko malas izmēru, lai bilde smuki ierakstītos aplī
+                const maxDimension = Math.max(this.width, this.height);
+                meme.render.sprite.xScale = targetWidth / maxDimension;
+                meme.render.sprite.yScale = targetWidth / maxDimension;
             };
 
             return meme;
         }
+
+        // Papildus vizuālais slānis: uzzīmē vieglu apli apkārt tēlam, lai redzētu precīzu fizikas zonu
+        Events.on(render, 'afterRender', () => {
+            const context = render.context;
+            const bodies = Composite.allBodies(world);
+
+            bodies.forEach(body => {
+                if (body.label === 'pepe') {
+                    const index = body.plugin.levelIndex;
+                    const size = EVOLUTION_LEVELS[index].size;
+                    const color = body.plugin.color;
+
+                    context.save();
+                    context.beginPath();
+                    context.arc(body.position.x, body.position.y, size, 0, 2 * Math.PI);
+                    context.fillStyle = color;
+                    context.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                    context.lineWidth = 1;
+                    context.fill();
+                    context.stroke();
+                    context.restore();
+                }
+            });
+        });
 
         document.getElementById('game-container').addEventListener('click', (event) => {
             if (!canDrop) return;
@@ -276,7 +302,7 @@
             Composite.add(world, newMeme);
 
             canDrop = false;
-            currentNextIndex = Math.floor(Math.random() * 2); // Atkal izvēlas Kurkuli vai Krupi nākamajam metienam
+            currentNextIndex = Math.floor(Math.random() * 2); 
             updateNextPreview();
 
             setTimeout(() => { canDrop = true; }, 400);
